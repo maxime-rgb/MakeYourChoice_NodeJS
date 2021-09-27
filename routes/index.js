@@ -55,7 +55,8 @@ router.get('/Surveys/:id', function (req, res) {
 
 router.get('/SurveyDetails/:id', function (req, res) {
 
-    const creator_id = parseInt(req.params.id)
+    const survey_id = parseInt(req.params.id)
+    console.log(survey_id);
     db.config.queryFormat = function (query, values) {
         if (!values) return query;
         return query.replace(/\:(\w+)/g, function (txt, key) {
@@ -66,7 +67,7 @@ router.get('/SurveyDetails/:id', function (req, res) {
         }.bind(this));
     };
 
-    db.query("SELECT Surveys.id, Surveys.Date, Surveys.Question, Surveys.Title, Users.Firstname FROM `Surveys` JOIN Users ON Users.id = Surveys.User_id WHERE Surveys.User_id = :id LIMIT 10", {id:creator_id}, (err, result) => {
+    db.query("SELECT Surveys.id, Surveys.Date, Surveys.Question, Surveys.Title, Users.Firstname, Answers.Answer FROM `Surveys` JOIN Users ON Users.id = Surveys.User_id JOIN Answers ON Answers.Question_id = Surveys.Id WHERE Surveys.Id = :id AND Answers.Question_id = Surveys.id LIMIT 10 ", {id:survey_id}, (err, result) => {
         if (err) {
             res.json({ message: "SQL Error" })
         }
@@ -161,6 +162,67 @@ router.post('/login', function (req, res) {
     })
 });
 
+router.post('/newSurvey/:id', function (req, res) {
+
+ 
+    const creator_id = parseInt(req.params.id)
+    console.log(id);
+    const Title = req.body.Title
+    const Question = req.body.Question
+    const Date = req.body.Date
+    const Answer = req.body.Answer
+    db.config.queryFormat = function (query, values) {
+        if (!values) return query;
+        return query.replace(/\:(\w+)/g, function (txt, key) {
+            if (values.hasOwnProperty(key)) {
+                return this.escape(values[key]);
+            }
+            return txt;
+        }.bind(this));
+    };
+
+
+  
+
+    $sqlQuery="INSERT INTO Surveys (User_id, Date, Title, Question) VALUES (:creator_id, :date,:title,:question)",{id:creator_id},
+    $result=mysql_query($sqlQuery),
+
+    $id = mysql_insert_id();
+
+    $sqlQuery = "INSERT INTO Answers(id, answer) VALUES (' $id ','$myEmail')";
+    $result=mysql_query($sqlQuery);
+        (err, result) => {
+                if (err) {
+                    res.json({ message: 'Erreur lors de l\'enregistrement du sondage' })
+                }
+                res.json({
+                    id: result.insertId,
+                    Title: req.body.Title,
+                    Question: req.body.Question,
+                    Date: req.body.Date,
+                    Answer: req.body.Answer,
+                })
+            }
+        
+        })
+    // db.query(
+        
+    //     "START TRANSACTION; INSERT INTO Surveys (User_id, Date, Title, Question) VALUES (:id, :date,:title,:question); INSERT INTO Answers (Question_id, Answer) VALUES (Surveys.Id, :answer); COMMIT;",
+    //     {id:creator_id, date: Date, title: Title, question: Question, answer: Answer},
+    //     (err, result) => {
+    //         if (err) {
+    //             res.json({ message: 'Erreur lors de l\'enregistrement du sondage' })
+    //         }
+    //         res.json({
+    //             id: result.insertId,
+    //             Title: req.body.Title,
+    //             Question: req.body.Question,
+    //             Date: req.body.Date,
+    //             Answer: req.body.Answer,
+    //         })
+    //     }
+    // );
+// });
 
 router.put('/Profil/:id', (req, res) => {
 
