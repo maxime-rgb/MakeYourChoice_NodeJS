@@ -1,0 +1,1 @@
+{"version":"0.0.0","name":"makeyourchoiceapi","dependencies":{"body-parser":{"version":"1.19.0"},"cookie-parser":{"version":"1.4.5"},"cors":{"version":"2.8.5"},"debug":{"version":"2.6.9"},"express":{"version":"4.16.4"},"http-errors":{"version":"1.6.3"},"morgan":{"version":"1.9.1"},"mysql":{"version":"2.18.1"},"nodemon":{"version":"2.0.12"},"pug":{"version":"2.0.0-beta11"}}}
