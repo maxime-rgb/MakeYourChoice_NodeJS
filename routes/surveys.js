@@ -65,7 +65,7 @@ router.get('/SurveyDetails/:id', function (req, res) {
         }.bind(this));
     };
 
-    db.query("SELECT surveys.Id, surveys.Title, surveys.Date, surveys.Question,surveys.answers, answers.answer  FROM surveys JOIN answers ON answers.Survey_id = surveys.Id WHERE surveys.Id = :id ", {id:survey_id}, (err, result) => {
+    db.query("SELECT surveys.Id, surveys.Title, surveys.Date, surveys.Question,surveys.answers, answers.answer  FROM surveys LEFT JOIN answers ON answers.Survey_id = surveys.Id WHERE surveys.Id = :id ", {id:survey_id}, (err, result) => {
         if (err) {
             res.json({ message: "SQL Error" })
         }
@@ -112,7 +112,31 @@ router.post('/newSurvey/:id', function (req, res) {
     )
 })
 
+router.post('/delete/:id', function(req,res){
+    const survey_id = parseInt(req.params.id)
+    //    
+    db.config.queryFormat = function (query, values) {
+        if (!values) return query;
+        return query.replace(/\:(\w+)/g, function (txt, key) {
+            if (values.hasOwnProperty(key)) {
+                return this.escape(values[key]);
+            }
+            return txt;
+        }.bind(this));
+    };
 
+    db.query(
+        `   
+        DELETE FROM surveys WHERE surveys.Id = :id                   
+        `,{id:survey_id},
+        (err, result) => {
+            if (err) {
+                res.json({ message: 'Erreur lors de la suppression du sondage' })
+            }
+            res.json('Le sondage à été supprimé')
+        }
+    )
+})
 
 module.exports = router;
 

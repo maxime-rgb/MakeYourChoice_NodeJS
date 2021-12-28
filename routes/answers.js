@@ -6,12 +6,11 @@ const bodyParser = require('body-parser')
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// configure the app to use bodyParser()
 app.use(bodyParser.urlencoded({
     extended: true
 }));
 app.use(bodyParser.json());
+
 
 const db = mysql.createConnection({
     host: "127.0.0.1",
@@ -49,8 +48,6 @@ router.post('/new', function (req, res) {
         }
     )
 })
-
-
 
 module.exports = router;
 
