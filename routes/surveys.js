@@ -81,8 +81,6 @@ router.get('/SurveyDetails/:id', function (req, res) {
 router.post('/newSurvey/:id', function (req, res) {
     console.log('ppl');
     const creator_id = parseInt(req.params.id)
-
-
     const Title = req.body.Title
     const Question = req.body.Question
     const Date = req.body.Date

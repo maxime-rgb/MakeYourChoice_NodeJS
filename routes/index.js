@@ -8,7 +8,6 @@ var bodyParser = require('body-parser')
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// configure the app to use bodyParser()
 app.use(bodyParser.urlencoded({
     extended: true
 }));

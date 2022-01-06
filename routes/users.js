@@ -2,7 +2,9 @@ const express = require('express');
 const app = express();
 const router = express.Router();
 const mysql = require('mysql');
-const bodyParser = require('body-parser')
+const bodyParser = require('body-parser');
+const bcrypt = require('bcryptjs');
+const saltRounds = 10;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -27,6 +29,8 @@ router.post('/register', function (req, res) {
     const LastName = req.body.LastName
     const Mail = req.body.Mail
     const Password = req.body.Password
+
+
     db.config.queryFormat = function (query, values) {
         if (!values) return query;
         return query.replace(/\:(\w+)/g, function (txt, key) {
@@ -37,11 +41,11 @@ router.post('/register', function (req, res) {
         }.bind(this));
     };
 
-    function insert() {
+    function insert(PasswordHash) {
 
         db.query(
             "INSERT INTO Users (LastName, FirstName, Mail, Password) VALUES (:lastname,:firstname,:mail,:password)",
-            { lastname: LastName, firstname: FirstName, mail: Mail, password: Password },
+            { lastname: LastName, firstname: FirstName, mail: Mail, password: PasswordHash },
             (err, result) => {
                 if (err) {
                     res.json({ message: 'Erreur lors de l\'enregistrement de l\'utilisateur' })
@@ -50,22 +54,27 @@ router.post('/register', function (req, res) {
                     id: result.insertId,
                     FirstName: req.body.FirstName,
                     LastName: req.body.LastName,
-                    Mail: req.body.Mail,
-                    Password: req.body.Password,
+                    Mail: req.body.Mail
                 })
             }
         );
     }
-    db.query("SELECT * From Users Where Mail = :mail", { mail: Mail }, (err, result) => {
-        if (err) {
-            res.json({ message: "SQL Error" })
-        }
-        if (result.length == 0) {
-            insert()
-        } else {
-            res.json({ message: "L'utilisateur existe déja" })
-        }
-    })
+    bcrypt.genSalt(saltRounds, (err, salt) => {
+        bcrypt.hash(Password, salt, (err, hash) => {
+            db.query("SELECT * From Users Where Mail = :mail", { mail: Mail }, (err, result) => {
+                if (err) {
+                    res.json({ message: "SQL Error" })
+                }
+                if (result.length == 0) {
+                    console.log(hash);
+                    insert(hash)
+                } else {
+                    res.json({ message: "L'utilisateur existe déja" })
+                }
+            })
+
+        });
+    });
 });
 
 router.post('/login', function (req, res) {
@@ -82,21 +91,24 @@ router.post('/login', function (req, res) {
         }.bind(this));
     };
 
-    db.query("SELECT * From Users Where Mail = :mail AND Password = :password", { mail: Mail, password: Password }, (err, result) => {
+    db.query("SELECT * From Users Where Mail = :mail", { mail: Mail}, (err, result) => {
         if (err) {
             res.json({ message: "SQL Error" })
         }
         if (result.length == 0) {
-            res.json({ message: "L'utilisateur n'existe pas" })
+            res.json({ message: "Mot de passe ou utilisateur incorrect" })
         } else {
-            console.log(result[0].id);
-            res.json({
-                id: result[0].Id,
-                FirstName: result[0].FirstName,
-                LastName: result[0].LastName,
-                Mail: result[0].Mail,
-                Password: result[0].Password
-            })
+            //Vérifier le mot de passe
+            if (bcrypt.compareSync(Password, result[0].Password)) {
+                res.json({
+                    id: result[0].Id,
+                    FirstName: result[0].FirstName,
+                    LastName: result[0].LastName,
+                    Mail: result[0].Mail
+                })    
+            } else {
+                res.json({ message: "Mot de passe ou utilisateur incorrect" })
+            }
         }
     })
 });
